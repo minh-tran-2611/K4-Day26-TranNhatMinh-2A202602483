@@ -34,6 +34,15 @@ python auth_server.py
 python auth_client.py
 ```
 
+Thử nhanh bằng `curl` (gửi request `initialize`):
+
+```bash
+INIT='{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"curl","version":"0"}}}'
+curl -s -o /dev/null -w "%{http_code}
+" -X POST http://localhost:8000/mcp \n  -H "Authorization: Bearer guest-token-000" \n  -H "Content-Type: application/json" -H "Accept: application/json, text/event-stream" -d "$INIT"
+# không token / token sai → 401, guest-token-000 → 403, dev-token-abc123 → 200
+```
+
 Luồng:
 
 ```
@@ -50,8 +59,9 @@ Client                                Server
 ```
 
 - Token hợp lệ → truy cập tool bình thường
-- Thiếu token → `401`
-- Token sai → `403`
+- Thiếu token → `401` (`invalid_token`)
+- Token sai → `401` (`invalid_token`)
+- Token hợp lệ nhưng thiếu scope `weather:read` (ví dụ `guest-token-000`) → `403` (`insufficient_scope`)
 - Logic tool không biết gì về auth — SDK xử lý ở tầng transport
 
 ---

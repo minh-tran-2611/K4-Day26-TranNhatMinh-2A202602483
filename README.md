@@ -176,7 +176,7 @@ MCP server phục vụ qua **HTTP** cho nhiều client → cần xác thực. MC
 
 - Server: cấu hình `AuthSettings` + implement `TokenVerifier` protocol
 - Client: gửi header `Authorization: Bearer <token>` qua `create_mcp_http_client(headers=...)` của MCP SDK
-- Không có token → 401, token sai → 403, logic tool không biết gì về auth
+- Không có token hoặc token sai → 401, token hợp lệ nhưng thiếu scope (`required_scopes`) → 403, logic tool không biết gì về auth
 
 | Tầng | Demo (stdio) | Production (HTTP) |
 |---|---|---|

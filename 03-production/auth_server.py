@@ -7,7 +7,8 @@ Luồng hoạt động:
   Client gửi request HTTP kèm header "Authorization: Bearer <token>"
     → MCP SDK tự chạy BearerAuthBackend để xác minh token
     → Token hợp lệ → cho phép truy cập tool
-    → Token sai / thiếu → trả về 401/403
+    → Token sai / thiếu → trả về 401
+    → Token hợp lệ nhưng thiếu scope "weather:read" → trả về 403
 
 Cách chạy:
     pip install -r ../requirements.txt     # từ thư mục gốc repo
@@ -24,9 +25,12 @@ from mcp.server.auth.settings import AuthSettings
 from mcp.server.mcpserver import MCPServer
 
 # --- Token store (production: dùng DB, Redis, hoặc JWT verification) ---
-VALID_TOKENS: dict[str, str] = {
-    os.environ.get("MCP_AUTH_TOKEN", "dev-token-abc123"): "dev-user",
-    "prod-key-xyz789": "prod-service",
+# token -> (client_id, scopes)
+VALID_TOKENS: dict[str, tuple[str, list[str]]] = {
+    os.environ.get("MCP_AUTH_TOKEN", "dev-token-abc123"): ("dev-user", ["weather:read"]),
+    "prod-key-xyz789": ("prod-service", ["weather:read"]),
+    # Token hợp lệ nhưng không có scope weather:read → server trả 403
+    "guest-token-000": ("guest", []),
 }
 
 
@@ -38,10 +42,11 @@ class StaticTokenVerifier(TokenVerifier):
     """
 
     async def verify_token(self, token: str) -> AccessToken | None:
-        client_id = VALID_TOKENS.get(token)
-        if client_id is None:
+        entry = VALID_TOKENS.get(token)
+        if entry is None:
             return None
-        return AccessToken(token=token, client_id=client_id, scopes=["weather:read"])
+        client_id, scopes = entry
+        return AccessToken(token=token, client_id=client_id, scopes=scopes)
 
 
 # --- MCP Server — logic tool không biết gì về auth --------------------
@@ -50,6 +55,8 @@ mcp = MCPServer(
     auth=AuthSettings(
         issuer_url="http://localhost:8000",
         resource_server_url="http://localhost:8000",
+        # Thiếu/sai token → 401; token hợp lệ nhưng thiếu scope này → 403
+        required_scopes=["weather:read"],
     ),
     token_verifier=StaticTokenVerifier(),
 )
