@@ -41,6 +41,7 @@ call_tool get_weather(city='Haiphong'):
 |---|---|
 | `weather_server.py` | MCP server — `@mcp.tool()` tự sinh schema từ type hints + docstring |
 | `weather_client.py` | MCP client — `list_tools` + `call_tool` qua stdio transport |
+| `weather_llm_client.py` | MCP client + LLM (Nemotron qua NVIDIA NIM) — luồng đầy đủ ở mục bên dưới |
 
 ---
 
@@ -230,6 +231,26 @@ Ví dụ trên chỉ demo **lớp giao thức** (không cần API key). Trong pr
 │  → Chúng BỔ SUNG cho nhau, không thay thế                │
 └──────────────────────────────────────────────────────────┘
 ```
+
+Luồng trên được hiện thực trong `weather_llm_client.py` (cần NVIDIA NIM API key):
+
+```bash
+export NVIDIA_API_KEY=nvapi-...   # hoặc ghi vào .env ở thư mục gốc repo
+python weather_llm_client.py
+```
+
+Kết quả mẫu:
+
+```
+[MCP] list_tools -> ['get_weather']
+[LLM -> MCP] get_weather({'city': 'Hanoi'}) -> Hanoi: 29°C, trời mưa
+[LLM -> MCP] get_weather({'city': 'Danang'}) -> Danang: 30°C, nhiều mây
+
+Trả lời: Hà Nội 29°C, trời mưa; Đà Nẵng 30°C, nhiều mây.
+```
+
+Khác với bài 01: schema lấy từ `list_tools()` (không viết tay), và tool chạy trong
+`weather_server.py` qua `call_tool()` (app không tự chạy hàm).
 
 ---
 
