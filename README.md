@@ -9,7 +9,7 @@ day26-mcp/
 ├── README.md                ← Bạn đang đọc file này
 ├── requirements.txt         ← pip install -r requirements.txt
 │
-├── 01-function-calling/     ← Bước 1: Function Calling thuần (Gemini SDK)
+├── 01-function-calling/     ← Bước 1: Function Calling thuần (NVIDIA NIM, OpenAI SDK)
 │   ├── README.md
 │   └── weather_function_calling.py
 │
@@ -45,8 +45,8 @@ pip install -r requirements.txt
 # MCP demo (không cần API key)
 cd 02-mcp-basics && python weather_client.py
 
-# Function Calling (cần Gemini API key)
-export GEMINI_API_KEY=...
+# Function Calling (cần NVIDIA NIM API key — hoặc ghi vào .env ở thư mục gốc)
+export NVIDIA_API_KEY=nvapi-...
 cd 01-function-calling && python weather_function_calling.py
 
 # Production — Auth (2 terminal)
@@ -108,7 +108,7 @@ LLM tổng hợp câu trả lời
 
 Cùng một tool `get_weather`, dưới đây là hai cách triển khai để thấy rõ sự khác biệt.
 
-### [Cách 1 — Function Calling thuần (Google Gemini SDK)](01-function-calling/)
+### [Cách 1 — Function Calling thuần (NVIDIA NIM — OpenAI-compatible API)](01-function-calling/)
 
 Tool được **định nghĩa và thực thi ngay trong app**. Model chỉ quyết định gọi tool nào, app tự chạy và đưa kết quả trở lại.
 
