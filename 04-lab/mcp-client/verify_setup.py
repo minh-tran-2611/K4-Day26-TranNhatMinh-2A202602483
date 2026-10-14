@@ -14,20 +14,21 @@ def check_environment():
     env_file = Path(".env")
     if not env_file.exists():
         print("❌ .env file not found")
-        print("   Run: echo 'GOOGLE_API_KEY=your_key' > .env")
+        print("   Run: echo 'NVIDIA_API_KEY=nvapi-your_key' > .env")
         return False
     
-    # Check if GOOGLE_API_KEY is set
+    # Check if NVIDIA_API_KEY is set (NIM hosts the Nemotron model)
     from dotenv import load_dotenv
     load_dotenv()
     
-    api_key = os.getenv("GOOGLE_API_KEY")
-    if not api_key or api_key == "your_google_api_key_here":
-        print("❌ GOOGLE_API_KEY not configured in .env")
-        print("   Get key from: https://aistudio.google.com/apikey")
+    api_key = os.getenv("NVIDIA_API_KEY")
+    if not api_key or not api_key.startswith("nvapi-") or api_key == "nvapi-your_key":
+        print("❌ NVIDIA_API_KEY not configured in .env")
+        print("   Get key from: https://build.nvidia.com")
         return False
     
-    print(f"✅ GOOGLE_API_KEY configured ({api_key[:10]}...)")
+    print(f"✅ NVIDIA_API_KEY configured ({api_key[:10]}...)")
+    print(f"   Model: {os.getenv('NIM_MODEL', 'nvidia/nemotron-3.5-lightning-30b-a3b')}")
     return True
 
 def check_dependencies():
@@ -36,7 +37,7 @@ def check_dependencies():
     
     required_packages = [
         ("google.adk", "Google ADK"),
-        ("google.generativeai", "Google Generative AI"),
+        ("litellm", "LiteLLM (NVIDIA NIM via OpenAI-compatible API)"),
         ("mcp", "MCP"),
         ("fastmcp", "FastMCP"),
         ("dotenv", "python-dotenv"),
@@ -54,7 +55,7 @@ def check_dependencies():
     
     if not all_installed:
         print("\n   Install with: uv sync")
-        print("   Or: pip install google-adk google-generativeai mcp fastmcp python-dotenv httpx")
+        print("   Or: pip install google-adk litellm mcp fastmcp python-dotenv httpx")
     
     return all_installed
 
@@ -115,7 +116,8 @@ def check_agent_import():
         
         from weather_agent import root_agent
         print(f"✅ Agent imported successfully: {root_agent.name}")
-        print(f"   Model: {root_agent.model}")
+        # root_agent.model là object LiteLlm → in tên model bên trong
+        print(f"   Model: {getattr(root_agent.model, 'model', root_agent.model)}")
         return True
     except Exception as e:
         print(f"❌ Failed to import agent: {e}")

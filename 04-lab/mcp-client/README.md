@@ -1,6 +1,7 @@
 # Weather Agent - Google ADK with MCP Server
 
 AI agent built with **Google Agent Development Kit (ADK)** that uses tools from a local **MCP server** via Streamable HTTP transport.
+The LLM is **Nemotron** (`nvidia/nemotron-3.5-lightning-30b-a3b`) on **NVIDIA NIM**, called through ADK's `LiteLlm` wrapper.
 
 ## Architecture
 
@@ -20,7 +21,7 @@ AI agent built with **Google Agent Development Kit (ADK)** that uses tools from 
                                                              │
                                                              ▼
                                                    ┌─────────────────────┐
-                                                   │  WeatherAPI.com     │
+                                                   │  OpenWeatherMap     │
                                                    └─────────────────────┘
 ```
 
@@ -40,7 +41,7 @@ AI agent built with **Google Agent Development Kit (ADK)** that uses tools from 
 
 ```bash
 cd ../mcp-server
-export WEATHERAPI_KEY="your_weatherapi_key"
+export OPENWEATHER_API_KEY="your_openweather_api_key"
 uv run python weather.py
 ```
 
@@ -49,9 +50,9 @@ uv run python weather.py
 ```bash
 cd mcp-client
 
-# Create .env file with your Google API key
-# Get free key from: https://aistudio.google.com/apikey
-echo "GOOGLE_API_KEY=your_google_api_key_here" > .env
+# Create .env file with your NVIDIA NIM API key
+# Get a key from: https://build.nvidia.com
+echo "NVIDIA_API_KEY=nvapi-your_key" > .env
 ```
 
 ### 3. Install Dependencies
@@ -101,10 +102,19 @@ connection_params = StreamableHTTPConnectionParams(
     timeout=30.0,
 )
 
+# NVIDIA NIM is OpenAI-compatible → LiteLLM "openai/" prefix + NIM base URL
+model = LiteLlm(
+    model=f"openai/{NIM_MODEL}",          # nvidia/nemotron-3.5-lightning-30b-a3b
+    api_base=NIM_BASE_URL,                # https://integrate.api.nvidia.com/v1
+    api_key=os.getenv("NVIDIA_API_KEY"),
+)
+
 root_agent = Agent(
     name="weather_agent",
-    model="gemini-2.5-flash",
+    model=model,
+    instruction=INSTRUCTION,
     tools=[weather_tools],
+    generate_content_config=types.GenerateContentConfig(temperature=0.3),
 )
 ```
 
@@ -132,7 +142,15 @@ Fix the connection and restart ADK web.
 
 Create `.env` file:
 ```bash
-GOOGLE_API_KEY=your_gemini_api_key
+NVIDIA_API_KEY=nvapi-your_key
+# Optional overrides
+NIM_MODEL=nvidia/nemotron-3.5-lightning-30b-a3b
+MCP_SERVER_URL=http://localhost:8085/mcp
+```
+
+Check the setup (keys, dependencies, MCP server reachable, agent import):
+```bash
+uv run python verify_setup.py
 ```
 
 ## Resources
@@ -140,4 +158,6 @@ GOOGLE_API_KEY=your_gemini_api_key
 - [Google ADK Documentation](https://google.github.io/adk-docs/)
 - [MCP Specification](https://modelcontextprotocol.io/)
 - [FastMCP GitHub](https://github.com/jlowin/fastmcp)
-- [WeatherAPI](https://www.weatherapi.com/)
+- [OpenWeatherMap API](https://openweathermap.org/api)
+- [NVIDIA NIM (build.nvidia.com)](https://build.nvidia.com)
+- [ADK + LiteLLM models](https://google.github.io/adk-docs/agents/models/)

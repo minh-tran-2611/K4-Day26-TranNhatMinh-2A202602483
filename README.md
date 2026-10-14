@@ -27,7 +27,7 @@ day26-mcp/
     ├── versioned_server.py
     └── versioned_client.py
 │
-└── 04-lab/                  ← Bước 4: Agent Google ADK + MCP server thật (WeatherAPI)
+└── 04-lab/                  ← Bước 4: Agent Google ADK (Nemotron/NVIDIA NIM) + MCP server thật (OpenWeatherMap)
     ├── README.md
     ├── mcp-server/          ← FastMCP server (Streamable HTTP, Dockerfile cho Cloud Run)
     └── mcp-client/          ← ADK agent dùng McpToolset
